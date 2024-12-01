@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,9 @@ import { useAuth } from '@/src/contexts/AuthContext';
 export default function SignIn() {
   const { createUser } = useAuth(); 
   const router = useRouter();
+
+  // Estado para controle de loading
+  const [isLoading, setIsLoading] = useState(false);
 
   // Validação do formulário com Yup
   const cadastroValidationSchema = yup.object().shape({
@@ -18,7 +21,10 @@ export default function SignIn() {
 
   // Função chamada ao submeter o formulário
   const cadastrar = async (nome: string, email: string, senha: string) => {
-    const success = await createUser({nome, email, senha}); // Chama a função register do AuthContext
+    setIsLoading(true); // Ativa o loading
+    const success = await createUser(nome, email, senha); // Chama a função createUser do AuthContext
+    setIsLoading(false); // Desativa o loading
+
     if (success) {
       router.push('/login'); // Navega para a página de login após cadastro bem-sucedido
     } else {
@@ -66,11 +72,15 @@ export default function SignIn() {
             />
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: isValid ? '#4CAF50' : '#B9B9B9' }]}
+              style={[styles.button, { backgroundColor: isValid && !isLoading ? '#4CAF50' : '#B9B9B9' }]}
               onPress={() => handleSubmit()}
-              disabled={!isValid}
+              disabled={!isValid || isLoading} // Desabilita o botão enquanto o formulário não for válido ou estiver carregando
             >
-              <Text style={styles.buttonText}>Cadastrar ➡️</Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#fff" /> // Mostra o ícone de carregamento
+              ) : (
+                <Text style={styles.buttonText}>Cadastrar ➡️</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
