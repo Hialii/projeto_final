@@ -1,4 +1,13 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Linking,
+  Button,
+} from 'react-native';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -8,16 +17,23 @@ import { Vaga } from '@/src/types/Vaga';
 export default function VagasScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  
+
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
+  // linka o botao para a página oficial do whatsapp ou para conversa do um contato específico
+  const handleWhatsappPress = () => {
+    Linking.openURL('https://www.whatsapp.com').catch((err) =>
+      console.error('Erro ao abrir o WhatsApp:', err)
+    );
+  };
+
   useEffect(() => {
     if (!user) {
       router.replace('/'); // redireciona para a página de login
     }
   }, [user]);
-  
+
   useEffect(() => {
     const loadVagas = async () => {
       try {
@@ -29,7 +45,7 @@ export default function VagasScreen() {
         setLoading(false);
       }
     };
-    
+
     if (user) {
       loadVagas(); // Carrega as vagas apenas se o usuário estiver autenticado
     }
@@ -47,9 +63,9 @@ export default function VagasScreen() {
       <Text style={styles.text}>
         Bem-vindo, {user?.name}! Aqui estão as vagas disponíveis:
       </Text>
-      
+
       {loading ? (
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size='large' color='#fff' />
       ) : (
         <ScrollView
           style={{ width: '100%', padding: 16 }}
@@ -60,10 +76,22 @@ export default function VagasScreen() {
               <View key={index} style={styles.vagaCard}>
                 <Text style={styles.vagaTitle}>{vaga.title}</Text>
                 <Text style={styles.vagaDescription}>{vaga.description}</Text>
+                {vaga.isOpen && (
+                  <TouchableOpacity
+                    style={styles.openButton}
+                    onPress={handleWhatsappPress}
+                  >
+                    <Text style={styles.openButtonText}>
+                      Fale pelo WhatsApp
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))
           ) : (
-            <Text style={styles.noVagas}>Nenhuma vaga disponível no momento.</Text>
+            <Text style={styles.noVagas}>
+              Nenhuma vaga disponível no momento.
+            </Text>
           )}
         </ScrollView>
       )}
@@ -116,5 +144,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     marginTop: 20,
+  },
+  openButton: {
+    backgroundColor: '#25d366',
+    padding: 10,
+    borderRadius: 5,
+  },
+  openButtonText: {
+    color: 'white',
+    textAlign: 'center',
   },
 });
